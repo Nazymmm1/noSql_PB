@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Post</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Create Post</h1>
+  <form id="postForm">
+    <input type="text" id="title" placeholder="Title" required><br>
+    <textarea id="content" placeholder="Content" required></textarea><br>
+    <input type="text" id="tags" placeholder="Tags (comma separated)"><br>
+    <button type="submit">Create</button>
+  </form>
+
+  <script src="script.js"></script>
+  <script>
+    const form = document.getElementById('postForm');
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const res = await fetch('http://localhost:5000/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer YOUR_TOKEN_HERE'
+        },
+        body: JSON.stringify({
+          title: document.getElementById('title').value,
+          content: document.getElementById('content').value,
+          tags: document.getElementById('tags').value.split(',').map(t => t.trim())
+        })
+      });
+      const data = await res.json();
+      alert('Post created!');
+      console.log(data);
+    });
+  </script>
+</body>
+</html>

@@ -56,22 +56,25 @@ exports.addComment = async (req, res) => {
   res.json(post);
 };
 
+// UPDATED: Toggle like (like/unlike)
 exports.likePost = async (req, res) => {
   const post = await Post.findById(req.params.id);
   if (!post) return res.status(404).json({ message: "Post not found" });
 
-  if (post.likes.includes(req.userId)) {
-    return res.status(400).json({ message: "You already liked this post" });
+  const userIndex = post.likes.indexOf(req.userId);
+  
+  if (userIndex > -1) {
+    // Unlike: user already liked, so remove
+    post.likes.splice(userIndex, 1);
+    await post.save();
+    return res.json({ message: "Post unliked", likesCount: post.likes.length, liked: false });
+  } else {
+    // Like: add user to likes
+    post.likes.push(req.userId);
+    await post.save();
+    return res.json({ message: "Post liked", likesCount: post.likes.length, liked: true });
   }
-
-  post.likes.push(req.userId);
-  await post.save();
-
-  res.json({ message: "Post liked", likesCount: post.likes.length });
 };
-
-
-
 
 exports.deleteComment = async (req, res) => {
   const post = await Post.findByIdAndUpdate(
@@ -114,8 +117,7 @@ exports.searchByTag = async (req, res) => {
   res.json(posts);
 };
 
-
-
+// UPDATED: Better reaction handling
 exports.reactToPost = async (req, res) => {
   const { type } = req.body;
   const userId = req.userId;
@@ -129,21 +131,31 @@ exports.reactToPost = async (req, res) => {
     return res.status(404).json({ message: "Post not found" });
   }
 
-  // Remove old reaction from this user
-  post.reactions = post.reactions.filter(
-    r => r.userId.toString() !== userId
+  // Find if user already reacted
+  const existingReactionIndex = post.reactions.findIndex(
+    r => r.userId.toString() === userId.toString()
   );
 
-  // Add new reaction
-  post.reactions.push({ userId, type });
+  if (existingReactionIndex > -1) {
+    // If same reaction, remove it (toggle off)
+    if (post.reactions[existingReactionIndex].type === type) {
+      post.reactions.splice(existingReactionIndex, 1);
+      await post.save();
+      return res.json({ message: "Reaction removed", post });
+    } else {
+      // Different reaction, update it
+      post.reactions[existingReactionIndex].type = type;
+    }
+  } else {
+    // No existing reaction, add new one
+    post.reactions.push({ userId, type });
+  }
 
   await post.save();
-  res.json(post);
+  res.json({ message: "Reaction updated", post });
 };
 
-
-
-
+// UPDATED: Toggle comment like
 exports.likeComment = async (req, res) => {
   const post = await Post.findById(req.params.postId);
   if (!post) return res.status(404).json({ message: "Post not found" });
@@ -151,14 +163,17 @@ exports.likeComment = async (req, res) => {
   const comment = post.comments.id(req.params.commentId);
   if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-  if (comment.likes.includes(req.userId)) {
-    return res.status(400).json({ message: "Already liked" });
+  const userIndex = comment.likes.indexOf(req.userId);
+
+  if (userIndex > -1) {
+    // Unlike
+    comment.likes.splice(userIndex, 1);
+    await post.save();
+    return res.json({ message: "Comment unliked", liked: false });
+  } else {
+    // Like
+    comment.likes.push(req.userId);
+    await post.save();
+    return res.json({ message: "Comment liked", liked: true });
   }
-
-  comment.likes.push(req.userId);
-  await post.save();
-
-  res.json({ message: "Comment liked" });
 };
-
-

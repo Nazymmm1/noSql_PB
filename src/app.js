@@ -1,5 +1,3 @@
-// UPDATED app.js - Make sure to use this version with CORS enabled!
-
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
@@ -21,5 +19,9 @@ app.use("/posts", postRoutes);
 
 const analyticsRoutes = require("./routes/analytics.routes");
 app.use("/analytics", analyticsRoutes);
+
+// NEW: User routes
+const userRoutes = require("./routes/user.routes");
+app.use("/users", userRoutes);
 
 module.exports = app;

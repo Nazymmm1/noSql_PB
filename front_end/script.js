@@ -1,9 +1,15 @@
-// API Configuration
+// API Configuration script js
 const API_URL = 'http://localhost:5000';
 
 // State
 let currentUser = null;
 let posts = [];
+let allPosts = []; // Store all posts for filtering
+let isSearching = false;
+let currentEditingPostId = null;
+let currentDeletingPostId = null;
+let currentDeletingCommentId = null;
+let currentDeletingCommentPostId = null;
 
 // DOM Elements
 const authModal = document.getElementById('authModal');
@@ -18,6 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     setupEventListeners();
     loadPosts();
+    
+    // Add Enter key listener for search
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchByTag();
+        }
+    });
 });
 
 // Check if user is logged in
@@ -40,7 +53,9 @@ function checkAuth() {
 function updateNavbar(isLoggedIn) {
     if (isLoggedIn) {
         navbar.innerHTML = `
-            <span class="username-display">👤 ${currentUser.username}</span>
+            <a href="profile.html" class="username-display" style="text-decoration: none; cursor: pointer;">
+                👤 ${currentUser.username}
+            </a>
             <button onclick="logout()">Logout</button>
         `;
     } else {
@@ -60,6 +75,15 @@ function setupEventListeners() {
     window.addEventListener('click', (e) => {
         if (e.target === authModal) {
             closeAuthModal();
+        }
+        if (e.target === document.getElementById('editPostModal')) {
+            closeEditModal();
+        }
+        if (e.target === document.getElementById('deleteModal')) {
+            closeDeleteModal();
+        }
+        if (e.target === document.getElementById('deleteCommentModal')) {
+            closeDeleteCommentModal();
         }
     });
 
@@ -84,6 +108,9 @@ function setupEventListeners() {
 
     // Create post form submit
     document.getElementById('createPostForm').addEventListener('submit', handleCreatePost);
+    
+    // Edit post form submit
+    document.getElementById('editPostForm').addEventListener('submit', handleEditPost);
 }
 
 // Auth Modal Functions
@@ -194,7 +221,8 @@ function logout() {
 async function loadPosts() {
     try {
         const response = await fetch(`${API_URL}/posts`);
-        posts = await response.json();
+        allPosts = await response.json();
+        posts = allPosts; // Show all posts initially
         renderPosts();
     } catch (error) {
         console.error('Error loading posts:', error);
@@ -237,13 +265,19 @@ function renderPosts() {
                         By ${post.author?.username || 'Unknown'} • ${formatDate(post.createdAt)}
                     </div>
                 </div>
+                ${currentUser && (post.author?._id === currentUser.userId || post.author === currentUser.userId) ? `
+                    <div class="post-actions-menu">
+                        <button onclick="editPost('${post._id}')" class="edit-btn" title="Edit">✏️</button>
+                        <button onclick="deletePost('${post._id}')" class="delete-btn" title="Delete">🗑️</button>
+                    </div>
+                ` : ''}
             </div>
             
             <div class="post-content">${escapeHtml(post.content)}</div>
             
             ${post.tags && post.tags.length > 0 ? `
                 <div class="post-tags">
-                    ${post.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                    ${post.tags.map(tag => `<span class="tag" onclick="searchByTagClick('${tag}')">#${tag}</span>`).join('')}
                 </div>
             ` : ''}
             
@@ -301,10 +335,17 @@ function renderComments(comments, postId) {
             like === currentUser.userId || like._id === currentUser.userId
         );
         
+        const isCommentAuthor = currentUser && (comment.userId === currentUser.userId || comment.userId?._id === currentUser.userId);
+        
         return `
         <div class="comment">
-            <div class="comment-meta">
-                ${formatDate(comment.createdAt)}
+            <div class="comment-header">
+                <div class="comment-meta">
+                    ${formatDate(comment.createdAt)}
+                </div>
+                ${isCommentAuthor ? `
+                    <button onclick="deleteComment('${postId}', '${comment._id}')" class="delete-comment-btn" title="Delete comment">🗑️</button>
+                ` : ''}
             </div>
             <div class="comment-text">${escapeHtml(comment.text)}</div>
             <div class="comment-actions">
@@ -509,4 +550,248 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Search by Tag
+async function searchByTag() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const tag = searchInput.value.trim();
+
+    if (!tag) {
+        showMessage('Please enter a tag to search', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/posts/search?tag=${encodeURIComponent(tag)}`);
+        
+        if (response.ok) {
+            posts = await response.json();
+            
+            if (posts.length === 0) {
+                postsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h4>No posts found</h4>
+                        <p>No posts found with tag "${escapeHtml(tag)}"</p>
+                        <button onclick="clearSearch()" style="margin-top: 1rem; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Show All Posts
+                        </button>
+                    </div>
+                `;
+            } else {
+                renderPosts();
+                showMessage(`Found ${posts.length} post${posts.length !== 1 ? 's' : ''} with tag "${tag}"`, 'success');
+            }
+            
+            isSearching = true;
+            clearBtn.style.display = 'block';
+        } else {
+            showMessage('Error searching posts', 'error');
+        }
+    } catch (error) {
+        console.error('Error searching:', error);
+        showMessage('Error searching posts', 'error');
+    }
+}
+
+// Clear Search
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    
+    searchInput.value = '';
+    posts = allPosts;
+    isSearching = false;
+    clearBtn.style.display = 'none';
+    
+    renderPosts();
+    showMessage('Showing all posts', 'success');
+}
+
+// Search by clicking a tag
+function searchByTagClick(tag) {
+    const searchInput = document.getElementById('searchInput');
+    searchInput.value = tag;
+    searchByTag();
+    
+    // Scroll to top to see results
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Edit Post - Open Modal
+function editPost(postId) {
+    const post = posts.find(p => p._id === postId);
+    if (!post) return;
+
+    currentEditingPostId = postId;
+
+    // Populate the form
+    document.getElementById('editPostTitle').value = post.title;
+    document.getElementById('editPostContent').value = post.content;
+    document.getElementById('editPostTags').value = post.tags?.join(', ') || '';
+
+    // Show modal
+    document.getElementById('editPostModal').classList.add('show');
+}
+
+// Handle Edit Post Form Submit
+async function handleEditPost(e) {
+    e.preventDefault();
+
+    if (!currentEditingPostId) return;
+
+    const title = document.getElementById('editPostTitle').value.trim();
+    const content = document.getElementById('editPostContent').value.trim();
+    const tagsInput = document.getElementById('editPostTags').value.trim();
+    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()) : [];
+
+    await updatePostAPI(currentEditingPostId, { title, content, tags });
+    closeEditModal();
+}
+
+// Close Edit Modal
+function closeEditModal() {
+    document.getElementById('editPostModal').classList.remove('show');
+    currentEditingPostId = null;
+    document.getElementById('editPostForm').reset();
+}
+
+// Update Post API Call
+async function updatePostAPI(postId, updates) {
+    if (!currentUser) {
+        showMessage('Please login to edit posts', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/posts/${postId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.token}`
+            },
+            body: JSON.stringify(updates)
+        });
+
+        if (response.ok) {
+            showMessage('Post updated successfully!', 'success');
+            loadPosts();
+        } else {
+            const data = await response.json();
+            showMessage(data.message || 'Failed to update post', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating post:', error);
+        showMessage('An error occurred while updating the post', 'error');
+    }
+}
+
+// Delete Post - Open Confirmation Modal
+function deletePost(postId) {
+    if (!currentUser) {
+        showMessage('Please login to delete posts', 'error');
+        return;
+    }
+
+    const post = posts.find(p => p._id === postId);
+    if (!post) return;
+
+    currentDeletingPostId = postId;
+    
+    // Show post title in confirmation
+    document.getElementById('deletePostTitle').textContent = post.title;
+    
+    // Show modal
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+// Confirm Delete Post
+async function confirmDelete() {
+    if (!currentDeletingPostId) return;
+
+    try {
+        const response = await fetch(`${API_URL}/posts/${currentDeletingPostId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+
+        if (response.ok) {
+            showMessage('Post deleted successfully!', 'success');
+            closeDeleteModal();
+            loadPosts();
+        } else {
+            const data = await response.json();
+            showMessage(data.message || 'Failed to delete post', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        showMessage('An error occurred while deleting the post', 'error');
+    }
+}
+
+// Close Delete Modal
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    currentDeletingPostId = null;
+}
+
+// Delete Comment - Open Confirmation Modal
+function deleteComment(postId, commentId) {
+    if (!currentUser) {
+        showMessage('Please login to delete comments', 'error');
+        return;
+    }
+
+    // Find the comment text
+    const post = posts.find(p => p._id === postId);
+    if (!post) return;
+    
+    const comment = post.comments?.find(c => c._id === commentId);
+    if (!comment) return;
+
+    currentDeletingCommentPostId = postId;
+    currentDeletingCommentId = commentId;
+    
+    // Show comment text in confirmation
+    document.getElementById('deleteCommentText').textContent = comment.text;
+    
+    // Show modal
+    document.getElementById('deleteCommentModal').classList.add('show');
+}
+
+// Confirm Delete Comment
+async function confirmDeleteComment() {
+    if (!currentDeletingCommentPostId || !currentDeletingCommentId) return;
+
+    try {
+        const response = await fetch(`${API_URL}/posts/${currentDeletingCommentPostId}/comments/${currentDeletingCommentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+
+        if (response.ok) {
+            showMessage('Comment deleted successfully!', 'success');
+            closeDeleteCommentModal();
+            loadPosts();
+        } else {
+            const data = await response.json();
+            showMessage(data.message || 'Failed to delete comment', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+        showMessage('An error occurred while deleting the comment', 'error');
+    }
+}
+
+// Close Delete Comment Modal
+function closeDeleteCommentModal() {
+    document.getElementById('deleteCommentModal').classList.remove('show');
+    currentDeletingCommentPostId = null;
+    currentDeletingCommentId = null;
 }

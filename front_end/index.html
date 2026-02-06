@@ -1,19 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Blog</title>
+    <title>bloggie</title>
+    <link rel="icon" type="image/x-icon" href="favicon.jpg">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Header -->
     <header>
         <div class="header-container">
-            <h1>Personal Blog</h1>
-            <nav id="navbar">
-                <!-- Will be populated by JS based on auth state -->
-            </nav>
+            <h1>BLOGGIE</h1>
+            <div class="header-right">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search by tag...">
+                    <button id="searchBtn" onclick="searchByTag()">🔍</button>
+                    <button id="clearSearchBtn" onclick="clearSearch()" style="display: none;">✕</button>
+                </div>
+                <nav id="navbar">
+                </nav>
+            </div>
         </div>
     </header>
 
@@ -47,6 +55,59 @@
         </div>
     </div>
 
+    <!-- Edit Post Modal -->
+    <div id="editPostModal" class="modal">
+        <div class="modal-content edit-modal">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Post</h2>
+            <form id="editPostForm">
+                <label for="editPostTitle">Title</label>
+                <input type="text" id="editPostTitle" placeholder="Post title" required>
+                
+                <label for="editPostContent">Content</label>
+                <textarea id="editPostContent" placeholder="Write your content..." required></textarea>
+                
+                <label for="editPostTags">Tags (comma separated)</label>
+                <input type="text" id="editPostTags" placeholder="e.g., javascript, tutorial, coding">
+                
+                <div class="modal-buttons">
+                    <button type="button" onclick="closeEditModal()" class="btn-cancel">Cancel</button>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content delete-modal">
+            <h2>⚠️ Delete Post?</h2>
+            <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+            <div class="delete-info">
+                <strong id="deletePostTitle"></strong>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeDeleteModal()" class="btn-cancel">Cancel</button>
+                <button onclick="confirmDelete()" class="btn-delete">Delete Forever</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Comment Confirmation Modal -->
+    <div id="deleteCommentModal" class="modal">
+        <div class="modal-content delete-modal">
+            <h2>⚠️ Delete Comment?</h2>
+            <p>Are you sure you want to delete this comment?</p>
+            <div class="delete-info">
+                <em id="deleteCommentText"></em>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeDeleteCommentModal()" class="btn-cancel">Cancel</button>
+                <button onclick="confirmDeleteComment()" class="btn-delete">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Container -->
     <div class="container">
         <!-- Create Post Section (only visible when logged in) -->
@@ -64,7 +125,7 @@
 
         <!-- Posts List -->
         <div class="posts-section">
-            <h2>Recent Posts</h2>
+            <h2 id="postsHeader">Recent Posts</h2>
             <div id="postsList">
                 <!-- Posts will be loaded here -->
             </div>

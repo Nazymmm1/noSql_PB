@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="icon" type="image/x-icon" href="favicon.jpg">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <h1><a href="index.html" style="color: rgb(104, 65, 65); text-decoration: none;">BLOGGIE</a></h1>
+            <nav id="navbar">
+                
+            </nav>
+        </div>
+    </header>
+
+    <!-- Profile Container -->
+    <div class="container">
+        <div class="profile-section">
+            <!-- Loading State -->
+            <div id="profileLoading" class="loading">Loading profile...</div>
+
+            <!-- Profile Content -->
+            <div id="profileContent" style="display: none;">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <span id="profileInitial">U</span>
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profileUsername">Username</h2>
+                        <p id="profileEmail" class="profile-email">email@example.com</p>
+                        <p id="profileJoined" class="profile-meta">Joined: Date</p>
+                    </div>
+                </div>
+
+                <!-- Profile Stats -->
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="statPosts">0</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statLikes">0</div>
+                        <div class="stat-label">Likes Received</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statComments">0</div>
+                        <div class="stat-label">Comments Received</div>
+                    </div>
+                </div>
+
+                <!-- User's Posts Section -->
+                <div class="user-posts-section">
+                    <h3>My Posts</h3>
+                    <div id="userPostsList">
+                        <!-- Posts will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+</html>

@@ -6,20 +6,23 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: #f5f5f5;
+    background-color: #f9e4e4;
     color: #333;
     line-height: 1.6;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 /* Header */
 header {
-    background-color: #2c3e50;
-    color: white;
+    background-color: rgb(246, 169, 188);
+    color: rgb(104, 65, 65);
     padding: 1rem 0;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
     z-index: 100;
+    
+    font-weight: bolder;
 }
 
 .header-container {
@@ -29,6 +32,60 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 2rem;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.search-bar input {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    width: 200px;
+    transition: width 0.3s;
+}
+
+.search-bar input:focus {
+    outline: none;
+    width: 250px;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+}
+
+.search-bar button {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.search-bar button:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+#clearSearchBtn {
+    background: rgba(231, 76, 60, 0.8);
+    border-color: rgba(231, 76, 60, 1);
+}
+
+#clearSearchBtn:hover {
+    background: rgba(231, 76, 60, 1);
 }
 
 header h1 {
@@ -63,6 +120,11 @@ nav button:hover, nav a:hover {
     padding: 8px 16px;
     background-color: rgba(255,255,255,0.1);
     border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.username-display:hover {
+    background-color: rgba(255,255,255,0.2);
 }
 
 /* Modal */
@@ -75,12 +137,33 @@ nav button:hover, nav a:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease;
 }
 
 .modal.show {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -90,6 +173,113 @@ nav button:hover, nav a:hover {
     width: 90%;
     max-width: 400px;
     position: relative;
+}
+
+.edit-modal {
+    max-width: 600px;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.delete-modal {
+    max-width: 500px;
+    text-align: center;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.delete-modal h2 {
+    color: #e74c3c;
+    margin-bottom: 1rem;
+}
+
+.delete-info {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1.5rem 0;
+    color: #856404;
+}
+
+.delete-info strong {
+    display: block;
+    color: #2c3e50;
+    margin-top: 0.5rem;
+}
+
+.delete-info em {
+    font-style: italic;
+    color: #555;
+}
+
+.edit-modal label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.edit-modal input,
+.edit-modal textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.edit-modal textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-save,
+.btn-delete {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.btn-cancel {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+}
+
+.btn-cancel:hover {
+    background-color: #bdc3c7;
+}
+
+.btn-save {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #229954;
+}
+
+.btn-delete {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c0392b;
 }
 
 .close {
@@ -229,6 +419,33 @@ nav button:hover, nav a:hover {
     margin-bottom: 1rem;
 }
 
+.post-actions-menu {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.post-actions-menu button {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.edit-btn:hover {
+    background-color: #3498db;
+    border-color: #3498db;
+    transform: scale(1.1);
+}
+
+.delete-btn:hover {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    transform: scale(1.1);
+}
+
 .post-title {
     font-size: 1.5rem;
     color: #2c3e50;
@@ -259,6 +476,14 @@ nav button:hover, nav a:hover {
     border-radius: 20px;
     font-size: 0.85rem;
     color: #555;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tag:hover {
+    background-color: #3498db;
+    color: white;
+    transform: translateY(-2px);
 }
 
 .post-actions {
@@ -283,6 +508,12 @@ nav button:hover, nav a:hover {
     background-color: #ecf0f1;
 }
 
+.post-actions button.liked {
+    background-color: #ffe6e6;
+    border-color: #ff6b6b;
+    color: #c92a2a;
+}
+
 .reaction-btn {
     font-size: 1.2rem;
     padding: 6px 12px;
@@ -292,6 +523,7 @@ nav button:hover, nav a:hover {
     background-color: #3498db;
     border-color: #3498db;
     color: white;
+    transform: scale(1.1);
 }
 
 /* Comments Section */
@@ -348,10 +580,32 @@ nav button:hover, nav a:hover {
     border-left: 3px solid #3498db;
 }
 
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
 .comment-meta {
     font-size: 0.85rem;
     color: #7f8c8d;
-    margin-bottom: 0.5rem;
+}
+
+.delete-comment-btn {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.delete-comment-btn:hover {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    transform: scale(1.1);
 }
 
 .comment-text {
@@ -377,6 +631,11 @@ nav button:hover, nav a:hover {
     text-decoration: underline;
 }
 
+.comment-actions button.liked {
+    color: #c92a2a;
+    font-weight: 600;
+}
+
 /* Loading and Error States */
 .loading {
     text-align: center;
@@ -400,11 +659,54 @@ nav button:hover, nav a:hover {
     margin-bottom: 1rem;
 }
 
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.empty-state h4 {
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #7f8c8d;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header-container {
         flex-direction: column;
         gap: 1rem;
+    }
+
+    .header-right {
+        flex-direction: column;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    .search-bar {
+        width: 100%;
+    }
+
+    .search-bar input {
+        flex: 1;
+        width: 100%;
+    }
+
+    .search-bar input:focus {
+        width: 100%;
     }
 
     nav {

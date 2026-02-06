@@ -4,13 +4,6 @@ const API_URL = 'http://localhost:5000';
 // State
 let currentUser = null;
 let userProfile = null;
-let userPosts = [];
-
-// DOM Elements
-const navbar = document.getElementById('navbar');
-const profileLoading = document.getElementById('profileLoading');
-const profileContent = document.getElementById('profileContent');
-const userPostsList = document.getElementById('userPostsList');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProfile();
 });
 
-// Check if user is logged in
+// Check Authentication
 function checkAuth() {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
@@ -28,123 +21,25 @@ function checkAuth() {
         currentUser = { token, username, userId };
         updateNavbar(true);
     } else {
-        updateNavbar(false);
-        // Redirect to home if not logged in
-        window.location.href = 'index.html';
+        showToast('Please login to view profile', 'error');
+        setTimeout(() => {
+            window.location.href = 'auth.html';
+        }, 2000);
     }
 }
 
-// Update navbar
+// Update Navbar
 function updateNavbar(isLoggedIn) {
+    const navbar = document.getElementById('navbar');
+    
     if (isLoggedIn) {
         navbar.innerHTML = `
-            <a href="index.html">Home</a>
-            <span class="username-display">👤 ${currentUser.username}</span>
-            <button onclick="logout()">Logout</button>
-        `;
-    } else {
-        navbar.innerHTML = `
-            <a href="index.html">Home</a>
-            <button onclick="window.location.href='index.html'">Login</button>
+            <a href="index.html" class="btn btn-link">🏠 Home</a>
+            <a href="search.html" class="btn btn-link">🔍 Search</a>
+            <a href="create-post.html" class="btn btn-link">✍️ Create</a>
+            <button onclick="logout()" class="btn btn-secondary">Logout</button>
         `;
     }
-}
-
-// Load Profile
-async function loadProfile() {
-    if (!currentUser) return;
-
-    try {
-        // Get user profile data
-        const profileResponse = await fetch(`${API_URL}/users/me`, {
-            headers: {
-                'Authorization': `Bearer ${currentUser.token}`
-            }
-        });
-
-        if (!profileResponse.ok) {
-            throw new Error('Failed to load profile');
-        }
-
-        const profileData = await profileResponse.json();
-        userProfile = profileData;
-
-        // Get user's posts
-        const postsResponse = await fetch(`${API_URL}/users/${currentUser.userId}/posts`);
-        
-        if (postsResponse.ok) {
-            userPosts = await postsResponse.json();
-        }
-
-        renderProfile();
-        renderUserPosts();
-        
-        profileLoading.style.display = 'none';
-        profileContent.style.display = 'block';
-
-    } catch (error) {
-        console.error('Error loading profile:', error);
-        profileLoading.innerHTML = '<div class="error">Failed to load profile. Please try again.</div>';
-    }
-}
-
-// Render Profile
-function renderProfile() {
-    if (!userProfile) return;
-
-    const { user, stats } = userProfile;
-
-    // Set profile initial (first letter of username)
-    document.getElementById('profileInitial').textContent = user.username.charAt(0).toUpperCase();
-
-    // Set profile info
-    document.getElementById('profileUsername').textContent = user.username;
-    document.getElementById('profileEmail').textContent = user.email;
-    document.getElementById('profileJoined').textContent = `Joined ${formatDate(user.createdAt)}`;
-
-    // Set stats
-    document.getElementById('statPosts').textContent = stats.postCount;
-    document.getElementById('statLikes').textContent = stats.totalLikes;
-    document.getElementById('statComments').textContent = stats.totalComments;
-}
-
-// Render User Posts
-function renderUserPosts() {
-    if (userPosts.length === 0) {
-        userPostsList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📝</div>
-                <h4>No posts yet</h4>
-                <p>Start sharing your thoughts with the world!</p>
-                <br>
-                <a href="index.html" style="color: #3498db; text-decoration: none;">
-                    ← Go back and create your first post
-                </a>
-            </div>
-        `;
-        return;
-    }
-
-    userPostsList.innerHTML = userPosts.map(post => `
-        <div class="user-post-card">
-            <h4 class="user-post-title">${escapeHtml(post.title)}</h4>
-            
-            <div class="user-post-meta">
-                <span>📅 ${formatDate(post.createdAt)}</span>
-                ${post.tags && post.tags.length > 0 ? `
-                    <span>🏷️ ${post.tags.join(', ')}</span>
-                ` : ''}
-            </div>
-            
-            <div class="user-post-content">${escapeHtml(post.content)}</div>
-            
-            <div class="user-post-stats">
-                <span>❤️ ${post.likes?.length || 0} likes</span>
-                <span>💬 ${post.comments?.length || 0} comments</span>
-                <span>👍 ${post.reactions?.length || 0} reactions</span>
-            </div>
-        </div>
-    `).join('');
 }
 
 // Logout
@@ -152,19 +47,191 @@ function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('userId');
-    currentUser = null;
-    window.location.href = 'index.html';
+    showToast('Logged out successfully', 'success');
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 1000);
+}
+
+// Load Profile
+async function loadProfile() {
+    if (!currentUser) return;
+    
+    const loadingDiv = document.getElementById('profileLoading');
+    const contentDiv = document.getElementById('profileContent');
+    
+    try {
+        console.log('Fetching profile for user:', currentUser); // Debug log
+        
+        const response = await fetch(`${API_URL}/users/me`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+        
+        console.log('Profile response status:', response.status); // Debug log
+        
+        if (!response.ok) {
+            throw new Error('Failed to load profile');
+        }
+        
+        userProfile = await response.json();
+        console.log('Received profile data:', userProfile); // Debug log
+        
+        loadingDiv.style.display = 'none';
+        contentDiv.style.display = 'block';
+        
+        renderProfile();
+        await loadUserPosts();
+        
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        loadingDiv.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">❌</div>
+                <h4>Failed to load profile</h4>
+                <p>${error.message}</p>
+                <p>Please try logging in again</p>
+                <a href="auth.html" class="btn btn-primary" style="margin-top: 1rem;">Go to Login</a>
+            </div>
+        `;
+    }
+}
+
+// Render Profile
+function renderProfile() {
+    console.log('User Profile Data:', userProfile); // Debug log
+    
+    // Handle two different response structures from backend
+    // Structure 1: { user: {...}, stats: {...} }
+    // Structure 2: { username, email, postsCount, ... }
+    
+    let username, email, createdAt, postsCount, likesReceived, commentsReceived;
+    
+    if (userProfile.user && userProfile.stats) {
+        // Backend returns { user: {...}, stats: {...} }
+        username = userProfile.user.username;
+        email = userProfile.user.email;
+        createdAt = userProfile.user.createdAt;
+        postsCount = userProfile.stats.postCount || 0;
+        likesReceived = userProfile.stats.totalLikes || 0;
+        commentsReceived = userProfile.stats.totalComments || 0;
+    } else {
+        // Backend returns flat object
+        username = userProfile.username || currentUser.username || 'User';
+        email = userProfile.email || 'No email';
+        createdAt = userProfile.createdAt;
+        postsCount = userProfile.postsCount || userProfile.postCount || 0;
+        likesReceived = userProfile.likesReceived || userProfile.totalLikes || 0;
+        commentsReceived = userProfile.commentsReceived || userProfile.totalComments || 0;
+    }
+    
+    const initial = username.charAt(0).toUpperCase();
+    document.getElementById('profileInitial').textContent = initial;
+    document.getElementById('profileUsername').textContent = username;
+    document.getElementById('profileEmail').textContent = email;
+    document.getElementById('profileJoined').textContent = `Joined: ${formatDate(createdAt || new Date())}`;
+    
+    // Stats
+    document.getElementById('statPosts').textContent = postsCount;
+    document.getElementById('statLikes').textContent = likesReceived;
+    document.getElementById('statComments').textContent = commentsReceived;
+    
+    console.log('Profile rendered:', { username, email, postsCount, likesReceived, commentsReceived });
+}
+
+// Load User Posts
+async function loadUserPosts() {
+    const postsContainer = document.getElementById('userPostsList');
+    
+    try {
+        const response = await fetch(`${API_URL}/users/${currentUser.userId}/posts`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+        
+        const posts = await response.json();
+        
+        if (posts.length === 0) {
+            postsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <h4>No posts yet</h4>
+                    <p>Start sharing your thoughts with the community!</p>
+                    <a href="create-post.html" class="btn btn-primary" style="margin-top: 1rem;">
+                        Create Your First Post
+                    </a>
+                </div>
+            `;
+            return;
+        }
+        
+        postsContainer.innerHTML = posts.map(post => `
+            <div class="user-post-card" onclick="goToPost('${post._id}')">
+                <h4 class="user-post-title">${escapeHtml(post.title)}</h4>
+                <div class="user-post-meta">
+                    <span>📅 ${formatDate(post.createdAt)}</span>
+                    ${post.tags && post.tags.length > 0 ? 
+                        `<span>🏷️ ${post.tags.join(', ')}</span>` : ''}
+                </div>
+                <div class="user-post-content">${escapeHtml(post.content.substring(0, 200))}${post.content.length > 200 ? '...' : ''}</div>
+                <div class="user-post-stats">
+                    <span>❤️ ${post.likes?.length || 0} likes</span>
+                    <span>💬 ${post.comments?.length || 0} comments</span>
+                    ${post.reactions ? 
+                        `<span>😊 ${post.reactions.length} reactions</span>` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading user posts:', error);
+        postsContainer.innerHTML = `
+            <div class="empty-state">
+                <p>Failed to load posts</p>
+            </div>
+        `;
+    }
+}
+
+// Navigate to post
+function goToPost(postId) {
+    window.location.href = `post.html?id=${postId}`;
 }
 
 // Utility Functions
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-}
-
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+}
+
+function showToast(message, type = 'success') {
+    // Create toast container if it doesn't exist
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 }

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloggie - Search</title>
+    <link rel="icon" type="image/x-icon" href="favicon.jpg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <h1><a href="index.html" class="logo">BLOGGIE</a></h1>
+            <div class="header-right">
+                <nav id="navbar">
+                    <!-- Will be populated by JavaScript -->
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Container -->
+    <div class="container">
+        <div class="search-page">
+            <div class="page-header">
+                <h2>🔍 Search Posts</h2>
+                <p>Find posts by tag, keyword, or title</p>
+            </div>
+
+            <!-- Search Filters -->
+            <div class="search-filters">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="tag" onclick="switchFilter('tag')">
+                        🏷️ Search by Tag
+                    </button>
+                    <button class="filter-tab" data-filter="keyword" onclick="switchFilter('keyword')">
+                        🔑 Search by Keyword
+                    </button>
+                    <button class="filter-tab" data-filter="title" onclick="switchFilter('title')">
+                        📝 Search by Title
+                    </button>
+                </div>
+
+                <!-- Tag Search -->
+                <div class="filter-content active" id="tagFilter">
+                    <div class="search-bar-container">
+                        <input type="text" id="tagInput" placeholder="Enter tag (e.g., javascript, tutorial)...">
+                        <button onclick="searchByTag()" class="btn btn-primary">Search</button>
+                    </div>
+                    <div class="popular-tags">
+                        <span class="label">Popular tags:</span>
+                        <div id="popularTags" class="tags-list">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keyword Search -->
+                <div class="filter-content" id="keywordFilter">
+                    <div class="search-bar-container">
+                        <input type="text" id="keywordInput" placeholder="Enter keyword to search in content...">
+                        <button onclick="searchByKeyword()" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+
+                <!-- Title Search -->
+                <div class="filter-content" id="titleFilter">
+                    <div class="search-bar-container">
+                        <input type="text" id="titleInput" placeholder="Enter post title...">
+                        <button onclick="searchByTitle()" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+
+                <!-- Clear Search -->
+                <div class="search-actions" id="searchActions" style="display: none;">
+                    <button onclick="clearSearch()" class="btn btn-secondary">✕ Clear Search</button>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div class="search-results">
+                <div class="results-header" id="resultsHeader" style="display: none;">
+                    <h3 id="resultsTitle">All Posts</h3>
+                    <span id="resultsCount" class="results-count"></span>
+                </div>
+                
+                <div id="searchResultsList" class="posts-grid">
+                    <!-- Results will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Messages -->
+    <div id="toastContainer"></div>
+
+    <script src="search.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloggie - Create Post</title>
+    <link rel="icon" type="image/x-icon" href="favicon.jpg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <h1><a href="index.html" class="logo">BLOGGIE</a></h1>
+            <div class="header-right">
+                <nav id="navbar">
+                    <!-- Will be populated by JavaScript -->
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Create Post Container -->
+    <div class="container">
+        <div class="create-post-page">
+            <div class="page-header">
+                <h2>✍️ Create New Post</h2>
+                <p>Share your thoughts with the community</p>
+            </div>
+
+            <div class="create-post-card">
+                <form id="createPostForm">
+                    <div class="form-group">
+                        <label for="postTitle">Post Title *</label>
+                        <input type="text" id="postTitle" placeholder="Enter an engaging title..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postContent">Content *</label>
+                        <textarea id="postContent" placeholder="Write your post content here..." rows="12" required></textarea>
+                        <div class="char-counter">
+                            <span id="charCount">0</span> characters
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postTags">Tags</label>
+                        <input type="text" id="postTags" placeholder="e.g., javascript, tutorial, coding (comma separated)">
+                        <small class="form-hint">Add tags to help others discover your post</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="index.html" class="btn btn-cancel">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Publish Post 🚀</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="post-preview" id="postPreview" style="display: none;">
+                <h3>Preview</h3>
+                <div class="preview-card">
+                    <h4 id="previewTitle">Your title will appear here</h4>
+                    <p id="previewContent">Your content will appear here...</p>
+                    <div id="previewTags" class="post-tags"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Messages -->
+    <div id="toastContainer"></div>
+
+    <script src="create-post.js"></script>
+</body>
+</html>

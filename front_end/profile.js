@@ -1,3 +1,5 @@
+// Same as original profile.js but with image support in loadUserPosts
+
 // API Configuration
 const API_URL = 'http://localhost:5000';
 
@@ -11,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProfile();
 });
 
-// Check Authentication
 function checkAuth() {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
@@ -28,7 +29,6 @@ function checkAuth() {
     }
 }
 
-// Update Navbar
 function updateNavbar(isLoggedIn) {
     const navbar = document.getElementById('navbar');
     
@@ -42,7 +42,6 @@ function updateNavbar(isLoggedIn) {
     }
 }
 
-// Logout
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
@@ -53,7 +52,6 @@ function logout() {
     }, 1000);
 }
 
-// Load Profile
 async function loadProfile() {
     if (!currentUser) return;
     
@@ -61,7 +59,7 @@ async function loadProfile() {
     const contentDiv = document.getElementById('profileContent');
     
     try {
-        console.log('Fetching profile for user:', currentUser); // Debug log
+        console.log('Fetching profile for user:', currentUser);
         
         const response = await fetch(`${API_URL}/users/me`, {
             headers: {
@@ -69,14 +67,14 @@ async function loadProfile() {
             }
         });
         
-        console.log('Profile response status:', response.status); // Debug log
+        console.log('Profile response status:', response.status);
         
         if (!response.ok) {
             throw new Error('Failed to load profile');
         }
         
         userProfile = await response.json();
-        console.log('Received profile data:', userProfile); // Debug log
+        console.log('Received profile data:', userProfile);
         
         loadingDiv.style.display = 'none';
         contentDiv.style.display = 'block';
@@ -98,18 +96,12 @@ async function loadProfile() {
     }
 }
 
-// Render Profile
 function renderProfile() {
-    console.log('User Profile Data:', userProfile); // Debug log
-    
-    // Handle two different response structures from backend
-    // Structure 1: { user: {...}, stats: {...} }
-    // Structure 2: { username, email, postsCount, ... }
+    console.log('User Profile Data:', userProfile);
     
     let username, email, createdAt, postsCount, likesReceived, commentsReceived;
     
     if (userProfile.user && userProfile.stats) {
-        // Backend returns { user: {...}, stats: {...} }
         username = userProfile.user.username;
         email = userProfile.user.email;
         createdAt = userProfile.user.createdAt;
@@ -117,7 +109,6 @@ function renderProfile() {
         likesReceived = userProfile.stats.totalLikes || 0;
         commentsReceived = userProfile.stats.totalComments || 0;
     } else {
-        // Backend returns flat object
         username = userProfile.username || currentUser.username || 'User';
         email = userProfile.email || 'No email';
         createdAt = userProfile.createdAt;
@@ -132,7 +123,6 @@ function renderProfile() {
     document.getElementById('profileEmail').textContent = email;
     document.getElementById('profileJoined').textContent = `Joined: ${formatDate(createdAt || new Date())}`;
     
-    // Stats
     document.getElementById('statPosts').textContent = postsCount;
     document.getElementById('statLikes').textContent = likesReceived;
     document.getElementById('statComments').textContent = commentsReceived;
@@ -140,7 +130,7 @@ function renderProfile() {
     console.log('Profile rendered:', { username, email, postsCount, likesReceived, commentsReceived });
 }
 
-// Load User Posts
+// UPDATED: Load User Posts with Image Support
 async function loadUserPosts() {
     const postsContainer = document.getElementById('userPostsList');
     
@@ -169,6 +159,13 @@ async function loadUserPosts() {
         
         postsContainer.innerHTML = posts.map(post => `
             <div class="user-post-card" onclick="goToPost('${post._id}')">
+                ${post.image ? `
+                    <div class="user-post-image">
+                        <img src="${API_URL}${post.image}" alt="${escapeHtml(post.title)}" 
+                             onerror="this.parentElement.style.display='none'"
+                             style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px 8px 0 0; margin-bottom: 1rem;">
+                    </div>
+                ` : ''}
                 <h4 class="user-post-title">${escapeHtml(post.title)}</h4>
                 <div class="user-post-meta">
                     <span>📅 ${formatDate(post.createdAt)}</span>
@@ -195,12 +192,10 @@ async function loadUserPosts() {
     }
 }
 
-// Navigate to post
 function goToPost(postId) {
     window.location.href = `post.html?id=${postId}`;
 }
 
-// Utility Functions
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -217,7 +212,6 @@ function formatDate(dateString) {
 }
 
 function showToast(message, type = 'success') {
-    // Create toast container if it doesn't exist
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');

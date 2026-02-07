@@ -1,13 +1,44 @@
 const Post = require("../models/Post");
+const path = require("path");
+const fs = require("fs");
 
 exports.createPost = async (req, res) => {
-  const post = await Post.create({
-    title: req.body.title,
-    content: req.body.content,
-    author: req.userId,
-    tags : req.body.tags
-  });
-  res.status(201).json(post);
+  try {
+    console.log("📝 Creating post...");
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+    
+    const postData = {
+      title: req.body.title,
+      content: req.body.content,
+      author: req.userId,
+      tags: req.body.tags
+    };
+
+    // If image was uploaded, add the image path
+    if (req.file) {
+      postData.image = `/uploads/${req.file.filename}`;
+      console.log("✅ Image added to post:", postData.image);
+    } else {
+      console.log("ℹ️  No image uploaded");
+    }
+
+    const post = await Post.create(postData);
+    console.log("✅ Post created successfully:", post._id);
+    res.status(201).json(post);
+  } catch (error) {
+    console.error("❌ Error creating post:", error);
+    
+    // If there was an error and a file was uploaded, delete it
+    if (req.file) {
+      const filePath = path.join(__dirname, "..", "..", "uploads", req.file.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log("🗑️ Cleaned up uploaded file after error");
+      }
+    }
+    res.status(500).json({ message: "Error creating post", error: error.message });
+  }
 };
 
 exports.getPosts = async (req, res) => {
@@ -16,28 +47,74 @@ exports.getPosts = async (req, res) => {
 };
 
 exports.updatePost = async (req, res) => {
-  const allowedFields = ["title", "content", "tags"];
-  const update = {};
+  try {
+    const allowedFields = ["title", "content", "tags"];
+    const update = {};
 
-  allowedFields.forEach(field => {
-    if (req.body[field] !== undefined) {
-      update[field] = req.body[field];
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        update[field] = req.body[field];
+      }
+    });
+
+    // If new image was uploaded
+    if (req.file) {
+      // Get the old post to delete old image
+      const oldPost = await Post.findById(req.params.id);
+      
+      if (oldPost && oldPost.image) {
+        // Delete old image file
+        const oldImagePath = path.join(__dirname, "..", "..", oldPost.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+
+      update.image = `/uploads/${req.file.filename}`;
     }
-  });
 
-  const post = await Post.findByIdAndUpdate(
-    req.params.id,
-    { $set: update },
-    { new: true }
-  );
+    if (req.body.removeImage === 'true') {
+      const oldPost = await Post.findById(req.params.id);
+      
+      if (oldPost && oldPost.image) {
+        const oldImagePath = path.join(__dirname, "..", "..", oldPost.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      
+      update.image = null;
+    }
 
-  res.json(post);
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $set: update },
+      { new: true }
+    );
+
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating post", error: error.message });
+  }
 };
 
-
 exports.deletePost = async (req, res) => {
-  await Post.findByIdAndDelete(req.params.id);
-  res.json({ message: "Post deleted" });
+  try {
+    const post = await Post.findById(req.params.id);
+    
+    // Delete associated image if exists
+    if (post && post.image) {
+      const imagePath = path.join(__dirname, "..", "..", post.image);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
+    res.json({ message: "Post deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting post", error: error.message });
+  }
 };
 
 exports.addComment = async (req, res) => {
@@ -112,7 +189,7 @@ exports.searchByTag = async (req, res) => {
 
   const posts = await Post.find({
     tags: { $in: [tag] }
-  });
+  }).populate("author", "username");
 
   res.json(posts);
 };

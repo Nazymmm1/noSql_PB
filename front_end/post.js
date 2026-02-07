@@ -9,7 +9,6 @@ let currentDeletingCommentId = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Get post ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     postId = urlParams.get('id');
     
@@ -72,7 +71,7 @@ function logout() {
     currentUser = null;
     showToast('Logged out successfully', 'success');
     checkAuth();
-    loadPost(); // Reload to update UI
+    loadPost();
 }
 
 // Load Post
@@ -114,6 +113,20 @@ function renderPost() {
     document.getElementById('postAuthor').textContent = currentPost.author?.username || 'Unknown';
     document.getElementById('postDate').textContent = formatDate(currentPost.createdAt);
     document.getElementById('postBody').textContent = currentPost.content;
+    
+    // Render image if exists
+    if (currentPost.image) {
+        const imageContainer = document.getElementById('postImageContainer');
+        const imageElement = document.getElementById('postImage');
+        
+        imageElement.src = `${API_URL}${currentPost.image}`;
+        imageElement.alt = currentPost.title;
+        imageElement.onerror = function() {
+            console.error('Failed to load image');
+            imageContainer.style.display = 'none';
+        };
+        imageContainer.style.display = 'block';
+    }
     
     // Render tags
     const tagsContainer = document.getElementById('postTags');
@@ -197,7 +210,6 @@ function renderComments() {
     
     commentsCount.textContent = currentPost.comments?.length || 0;
     
-    // Show comment form or login prompt
     if (currentUser) {
         addCommentForm.style.display = 'block';
         loginPrompt.style.display = 'none';
@@ -380,21 +392,14 @@ function deleteComment(commentId) {
 
     currentDeletingCommentId = commentId;
     
-    // Set the comment text in the modal
     const commentTextElement = document.getElementById('deleteCommentText');
     if (commentTextElement) {
         commentTextElement.textContent = comment.text;
-    } else {
-        console.error('deleteCommentText element not found in DOM');
     }
     
-    // Show the modal
     const modal = document.getElementById('deleteCommentModal');
     if (modal) {
         modal.classList.add('show');
-    } else {
-        console.error('deleteCommentModal not found in DOM');
-        showToast('Error opening delete modal', 'error');
     }
 }
 
@@ -424,16 +429,27 @@ async function confirmDeleteComment() {
     }
 }
 
-// Edit Post
+// Edit Post - with image support
 function editPost() {
     document.getElementById('editPostTitle').value = currentPost.title;
     document.getElementById('editPostContent').value = currentPost.content;
     document.getElementById('editPostTags').value = currentPost.tags?.join(', ') || '';
     
+    // Show current image if exists
+    const currentImageSection = document.getElementById('currentImageSection');
+    const currentPostImage = document.getElementById('currentPostImage');
+    
+    if (currentPost.image) {
+        currentPostImage.src = `${API_URL}${currentPost.image}`;
+        currentImageSection.style.display = 'block';
+    } else {
+        currentImageSection.style.display = 'none';
+    }
+    
     document.getElementById('editPostModal').classList.add('show');
 }
 
-// Handle Edit Post Form
+// Handle Edit Post Form - with FormData for image
 document.getElementById('editPostForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -441,15 +457,31 @@ document.getElementById('editPostForm')?.addEventListener('submit', async (e) =>
     const content = document.getElementById('editPostContent').value.trim();
     const tagsInput = document.getElementById('editPostTags').value.trim();
     const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()) : [];
+    
+    const newImageInput = document.getElementById('editPostImage');
+    const removeImageCheckbox = document.getElementById('removeImageCheckbox');
+
+    // Use FormData for image upload
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    formData.append('tags', JSON.stringify(tags));
+    
+    // Handle image
+    if (newImageInput.files[0]) {
+        formData.append('image', newImageInput.files[0]);
+    } else if (removeImageCheckbox && removeImageCheckbox.checked) {
+        formData.append('removeImage', 'true');
+    }
 
     try {
         const response = await fetch(`${API_URL}/posts/${postId}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${currentUser.token}`
+                // Don't set Content-Type for FormData
             },
-            body: JSON.stringify({ title, content, tags })
+            body: formData
         });
 
         if (response.ok) {
@@ -513,6 +545,8 @@ function setupModalListeners() {
 
 function closeEditModal() {
     document.getElementById('editPostModal').classList.remove('show');
+    document.getElementById('editPostImage').value = '';
+    document.getElementById('removeImageCheckbox').checked = false;
 }
 
 function closeDeleteModal() {

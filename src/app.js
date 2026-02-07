@@ -5,10 +5,12 @@ const cors = require("cors");
 
 dotenv.config();
 
-// Enable CORS - IMPORTANT for frontend to work!
 app.use(cors());
 
 app.use(express.json());
+
+const path = require("path");
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Routes
 const authRoutes = require("./routes/auth.routes");
@@ -20,7 +22,6 @@ app.use("/posts", postRoutes);
 const analyticsRoutes = require("./routes/analytics.routes");
 app.use("/analytics", analyticsRoutes);
 
-// NEW: User routes
 const userRoutes = require("./routes/user.routes");
 app.use("/users", userRoutes);
 

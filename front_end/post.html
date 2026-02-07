@@ -14,7 +14,6 @@
             <h1><a href="index.html" class="logo">BLOGGIE</a></h1>
             <div class="header-right">
                 <nav id="navbar">
-                    <!-- Will be populated by JavaScript -->
                 </nav>
             </div>
         </div>
@@ -40,6 +39,11 @@
                             <span class="date" id="postDate"></span>
                         </div>
                         <div id="postTags" class="post-tags"></div>
+                    </div>
+
+                    <!-- Post Image (if exists) -->
+                    <div id="postImageContainer" style="display: none; margin: 1.5rem 0;">
+                        <img id="postImage" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                     </div>
 
                     <div class="post-content-detail" id="postBody"></div>
@@ -81,7 +85,7 @@
                 <!-- Comments Section -->
                 <section class="comments-section-detail">
                     <div class="comments-header">
-                        <h2>💬 Comments <span id="commentsCount" class="count">0</span></h2>
+                        <h2>Comments <span id="commentsCount" class="count">0</span></h2>
                     </div>
 
                     <!-- Add Comment Form -->
@@ -110,7 +114,7 @@
         <div class="modal-content edit-modal">
             <span class="close" onclick="closeEditModal()">&times;</span>
             <h2>Edit Post</h2>
-            <form id="editPostForm">
+            <form id="editPostForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="editPostTitle">Title</label>
                     <input type="text" id="editPostTitle" required>
@@ -119,6 +123,25 @@
                 <div class="form-group">
                     <label for="editPostContent">Content</label>
                     <textarea id="editPostContent" rows="10" required></textarea>
+                </div>
+
+                <!-- Current Image Display -->
+                <div id="currentImageSection" style="display: none; margin-bottom: 1rem;">
+                    <label>Current Image:</label>
+                    <div style="margin: 0.5rem 0;">
+                        <img id="currentPostImage" style="max-width: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="removeImageCheckbox">
+                        <span>Remove current image</span>
+                    </label>
+                </div>
+
+                <!-- New Image Upload -->
+                <div class="form-group">
+                    <label for="editPostImage">Upload New Image (Optional)</label>
+                    <input type="file" id="editPostImage" accept="image/*">
+                    <small class="form-hint">Max 5MB • JPG, PNG, GIF, WebP</small>
                 </div>
                 
                 <div class="form-group">

@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAllPosts();
     loadPopularTags();
     
-    // Check if there's a tag parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
     const tag = urlParams.get('tag');
     if (tag) {
@@ -20,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchByTag();
     }
     
-    // Add Enter key listeners
     document.getElementById('tagInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchByTag();
     });
@@ -32,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Check Authentication
 function checkAuth() {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
@@ -47,7 +44,6 @@ function checkAuth() {
     }
 }
 
-// Update Navbar
 function updateNavbar(isLoggedIn) {
     const navbar = document.getElementById('navbar');
     
@@ -68,7 +64,6 @@ function updateNavbar(isLoggedIn) {
     }
 }
 
-// Logout
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
@@ -78,24 +73,20 @@ function logout() {
     checkAuth();
 }
 
-// Switch Filter
 function switchFilter(filter) {
     currentFilter = filter;
     
-    // Update tabs
     document.querySelectorAll('.filter-tab').forEach(tab => {
         tab.classList.remove('active');
     });
     document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
     
-    // Update content
     document.querySelectorAll('.filter-content').forEach(content => {
         content.classList.remove('active');
     });
     document.getElementById(`${filter}Filter`).classList.add('active');
 }
 
-// Load All Posts
 async function loadAllPosts() {
     try {
         const response = await fetch(`${API_URL}/posts`);
@@ -109,13 +100,11 @@ async function loadAllPosts() {
     }
 }
 
-// Load Popular Tags
 async function loadPopularTags() {
     try {
         const response = await fetch(`${API_URL}/posts`);
         const posts = await response.json();
         
-        // Extract and count tags
         const tagCount = {};
         posts.forEach(post => {
             if (post.tags) {
@@ -125,7 +114,6 @@ async function loadPopularTags() {
             }
         });
         
-        // Get top 10 tags
         const popularTags = Object.entries(tagCount)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
@@ -140,13 +128,11 @@ async function loadPopularTags() {
     }
 }
 
-// Quick search by clicking popular tag
 function quickSearchTag(tag) {
     document.getElementById('tagInput').value = tag;
     searchByTag();
 }
 
-// Search by Tag
 async function searchByTag() {
     const tag = document.getElementById('tagInput').value.trim();
     
@@ -174,7 +160,6 @@ async function searchByTag() {
     }
 }
 
-// Search by Keyword
 async function searchByKeyword() {
     const keyword = document.getElementById('keywordInput').value.trim().toLowerCase();
     
@@ -199,7 +184,6 @@ async function searchByKeyword() {
     }
 }
 
-// Search by Title
 async function searchByTitle() {
     const title = document.getElementById('titleInput').value.trim().toLowerCase();
     
@@ -223,7 +207,6 @@ async function searchByTitle() {
     }
 }
 
-// Clear Search
 function clearSearch() {
     document.getElementById('tagInput').value = '';
     document.getElementById('keywordInput').value = '';
@@ -236,7 +219,7 @@ function clearSearch() {
     showToast('Search cleared', 'success');
 }
 
-// Render Posts
+// UPDATED: Render Posts with Image Support
 function renderPosts(posts) {
     const container = document.getElementById('searchResultsList');
     
@@ -253,6 +236,13 @@ function renderPosts(posts) {
     
     container.innerHTML = posts.map(post => `
         <div class="post-card" onclick="goToPost('${post._id}')">
+            ${post.image ? `
+                <div class="post-image">
+                    <img src="${API_URL}${post.image}" alt="${escapeHtml(post.title)}" 
+                         onerror="this.parentElement.style.display='none'"
+                         style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px 8px 0 0;">
+                </div>
+            ` : ''}
             <div class="post-header">
                 <h3 class="post-title">${escapeHtml(post.title)}</h3>
                 <div class="post-meta">
@@ -282,7 +272,6 @@ function renderPosts(posts) {
     `).join('');
 }
 
-// Update Results Header
 function updateResultsHeader(title, count) {
     const header = document.getElementById('resultsHeader');
     const titleElement = document.getElementById('resultsTitle');
@@ -293,7 +282,6 @@ function updateResultsHeader(title, count) {
     countElement.textContent = `${count} post${count !== 1 ? 's' : ''}`;
 }
 
-// Show/Hide Search Actions
 function showSearchActions() {
     document.getElementById('searchActions').style.display = 'block';
 }
@@ -302,12 +290,10 @@ function hideSearchActions() {
     document.getElementById('searchActions').style.display = 'none';
 }
 
-// Navigate to post
 function goToPost(postId) {
     window.location.href = `post.html?id=${postId}`;
 }
 
-// Utility Functions
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;

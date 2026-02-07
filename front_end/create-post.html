@@ -14,7 +14,6 @@
             <h1><a href="index.html" class="logo">BLOGGIE</a></h1>
             <div class="header-right">
                 <nav id="navbar">
-                    <!-- Will be populated by JavaScript -->
                 </nav>
             </div>
         </div>
@@ -29,7 +28,7 @@
             </div>
 
             <div class="create-post-card">
-                <form id="createPostForm">
+                <form id="createPostForm" enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="postTitle">Post Title *</label>
                         <input type="text" id="postTitle" placeholder="Enter an engaging title..." required>
@@ -40,6 +39,20 @@
                         <textarea id="postContent" placeholder="Write your post content here..." rows="12" required></textarea>
                         <div class="char-counter">
                             <span id="charCount">0</span> characters
+                        </div>
+                    </div>
+
+                    <!-- NEW: Image Upload Field -->
+                    <div class="form-group">
+                        <label for="postImage">Image (Optional)</label>
+                        <input type="file" id="postImage" accept="image/*">
+                        <small class="form-hint">Max 5MB • JPG, PNG, GIF, WebP</small>
+                        <!-- Image Preview -->
+                        <div id="imagePreviewContainer" style="display: none; margin-top: 1rem;">
+                            <img id="imagePreview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <button type="button" onclick="removeImagePreview()" class="btn-cancel" style="margin-top: 0.5rem; padding: 0.5rem 1rem;">
+                                Remove Image
+                            </button>
                         </div>
                     </div>
 
@@ -61,6 +74,9 @@
                 <h3>Preview</h3>
                 <div class="preview-card">
                     <h4 id="previewTitle">Your title will appear here</h4>
+                    <div id="previewImageContainer" style="display: none; margin: 1rem 0;">
+                        <img id="previewImage" style="max-width: 100%; border-radius: 8px;">
+                    </div>
                     <p id="previewContent">Your content will appear here...</p>
                     <div id="previewTags" class="post-tags"></div>
                 </div>

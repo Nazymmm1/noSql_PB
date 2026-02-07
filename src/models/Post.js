@@ -13,29 +13,34 @@ const postSchema = new mongoose.Schema(
     content: { type: String, required: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
+    image: {
+      type: String,  // Stores the file path or URL
+      default: null
+    },
+
     tags: {
       type: [String],
       default: []
     },
 
     likes: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    default: []
-  }
-]
-,
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: []
+      }
+    ],
 
     reactions: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         type: {
           type: String,
-          enum: ["👍", "❤️", "😂", "😭", "😡"]}
-
+          enum: ["👍", "❤️", "😂", "😭", "😡"]
+        }
       }
     ],
+    
     comments: [commentSchema]
   },
   { timestamps: true }

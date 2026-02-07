@@ -37,7 +37,6 @@ function updateNavbar(isLoggedIn) {
             <button onclick="logout()" class="btn btn-secondary">Logout</button>
         `;
         
-        // Show create post button
         const createBtn = document.getElementById('createPostBtn');
         if (createBtn) {
             createBtn.style.display = 'inline-flex';
@@ -47,7 +46,6 @@ function updateNavbar(isLoggedIn) {
             <a href="auth.html" class="btn btn-primary">Login / Sign Up</a>
         `;
         
-        // Hide create post button
         const createBtn = document.getElementById('createPostBtn');
         if (createBtn) {
             createBtn.style.display = 'none';
@@ -69,14 +67,14 @@ function logout() {
 async function loadRecentPosts() {
     const postsList = document.getElementById('postsList');
     
-    console.log('Loading posts from:', `${API_URL}/posts`); // Debug log
+    console.log('Loading posts from:', `${API_URL}/posts`);
     
     try {
         const response = await fetch(`${API_URL}/posts`);
-        console.log('Posts response status:', response.status); // Debug log
+        console.log('Posts response status:', response.status);
         
         const posts = await response.json();
-        console.log('Received posts:', posts); // Debug log
+        console.log('Received posts:', posts);
         
         if (posts.length === 0) {
             postsList.innerHTML = `
@@ -89,12 +87,18 @@ async function loadRecentPosts() {
             return;
         }
         
-        // Show only recent posts (limit to 12)
         const recentPosts = posts.slice(0, 12);
-        console.log('Displaying posts:', recentPosts.length); // Debug log
+        console.log('Displaying posts:', recentPosts.length);
         
         postsList.innerHTML = recentPosts.map(post => `
             <div class="post-card" onclick="goToPost('${post._id}')">
+                ${post.image ? `
+                    <div class="post-image">
+                        <img src="${API_URL}${post.image}" alt="${escapeHtml(post.title)}" 
+                             onerror="this.parentElement.style.display='none'"
+                             style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px 8px 0 0;">
+                    </div>
+                ` : ''}
                 <div class="post-header">
                     <h3 class="post-title">${escapeHtml(post.title)}</h3>
                     <div class="post-meta">
@@ -129,17 +133,14 @@ async function loadRecentPosts() {
     }
 }
 
-// Navigate to post page
 function goToPost(postId) {
     window.location.href = `post.html?id=${postId}`;
 }
 
-// Search by tag (redirect to search page)
 function searchByTag(tag) {
     window.location.href = `search.html?tag=${encodeURIComponent(tag)}`;
 }
 
-// Utility Functions
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
